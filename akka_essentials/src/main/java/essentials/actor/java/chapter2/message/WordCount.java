@@ -1,4 +1,4 @@
-package chapter2.message;
+package essentials.actor.java.chapter2.message;
 
 public final class WordCount {
 

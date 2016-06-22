@@ -1,10 +1,10 @@
-package chapter2java8.actor;
+package essentials.actor.java.chapter2java8.actor;
 
+import essentials.actor.java.chapter2.message.MapData;
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
-import chapter2.message.MapData;
-import chapter2.message.ReduceData;
-import chapter2.message.WordCount;
+import essentials.actor.java.chapter2.message.ReduceData;
+import essentials.actor.java.chapter2.message.WordCount;
 
 import java.util.HashMap;
 import java.util.List;

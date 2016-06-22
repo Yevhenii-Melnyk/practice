@@ -1,19 +1,20 @@
-package chapter2java8;
+package essentials.actor.java.chapter2java8;
 
+import essentials.actor.java.chapter2.message.Result;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 
-import chapter2.message.Result;
-import chapter2java8.actor.MasterActor;
+import essentials.actor.java.chapter2java8.actor.MasterActor;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 
 import java.util.concurrent.TimeUnit;
 
 public class MapReduceApplication {
+
     public static void main(String[] args) throws Exception {
         Timeout timeout = new Timeout(1, TimeUnit.SECONDS);
         ActorSystem actorSystem = ActorSystem.create("MapReduceAppJava8");
@@ -26,6 +27,7 @@ public class MapReduceApplication {
         Future<Object> future = Patterns.ask(master, new Result(), timeout);
         String result = (String) Await.result(future, timeout.duration());
         System.out.println(result);
-        actorSystem.shutdown();
+        actorSystem.terminate();
     }
+
 }

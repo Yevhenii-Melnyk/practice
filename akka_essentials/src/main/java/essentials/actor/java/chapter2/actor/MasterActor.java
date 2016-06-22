@@ -1,19 +1,19 @@
-package chapter2.actor;
+package essentials.actor.java.chapter2.actor;
 
+import essentials.actor.java.chapter2.message.MapData;
+import essentials.actor.java.chapter2.message.ReduceData;
+import essentials.actor.java.chapter2.message.Result;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.routing.RoundRobinPool;
-import chapter2.message.MapData;
-import chapter2.message.ReduceData;
-import chapter2.message.Result;
 
 public class MasterActor extends UntypedActor {
 
-    ActorRef mapActor = context().actorOf(Props.create(MapActor.class, MapActor::new).withRouter(new RoundRobinPool(5)), "map");
-    ActorRef reduceActor = context().actorOf(Props.create(ReduceActor.class, ReduceActor::new)
+    private ActorRef mapActor = context().actorOf(Props.create(MapActor.class, MapActor::new).withRouter(new RoundRobinPool(5)), "map");
+    private ActorRef reduceActor = context().actorOf(Props.create(ReduceActor.class, ReduceActor::new)
             .withRouter(new RoundRobinPool(5)), "reduce");
-    ActorRef aggregateActor = getContext().actorOf(Props.create(AggregateActor.class, AggregateActor::new), "aggregate");
+    private ActorRef aggregateActor = getContext().actorOf(Props.create(AggregateActor.class, AggregateActor::new), "aggregate");
 
     @Override
     public void onReceive(Object message) throws Exception {

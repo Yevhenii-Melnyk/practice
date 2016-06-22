@@ -1,13 +1,13 @@
-package chapter2java8.actor;
+package essentials.actor.java.chapter2java8.actor;
 
+import essentials.actor.java.chapter2.message.MapData;
+import essentials.actor.java.chapter2.message.ReduceData;
+import essentials.actor.java.chapter2.message.Result;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.japi.pf.ReceiveBuilder;
 import akka.routing.RoundRobinPool;
-import chapter2.message.MapData;
-import chapter2.message.ReduceData;
-import chapter2.message.Result;
 
 public class MasterActor extends AbstractActor {
 

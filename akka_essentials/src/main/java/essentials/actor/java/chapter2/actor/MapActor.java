@@ -1,8 +1,8 @@
-package chapter2.actor;
+package essentials.actor.java.chapter2.actor;
 
+import essentials.actor.java.chapter2.message.MapData;
+import essentials.actor.java.chapter2.message.WordCount;
 import akka.actor.UntypedActor;
-import chapter2.message.MapData;
-import chapter2.message.WordCount;
 
 import java.util.ArrayList;
 import java.util.Arrays;

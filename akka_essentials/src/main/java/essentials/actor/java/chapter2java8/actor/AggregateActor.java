@@ -1,9 +1,9 @@
-package chapter2java8.actor;
+package essentials.actor.java.chapter2java8.actor;
 
+import essentials.actor.java.chapter2.message.Result;
 import akka.actor.AbstractActor;
 import akka.japi.pf.ReceiveBuilder;
-import chapter2.message.ReduceData;
-import chapter2.message.Result;
+import essentials.actor.java.chapter2.message.ReduceData;
 
 import java.util.HashMap;
 import java.util.Map;

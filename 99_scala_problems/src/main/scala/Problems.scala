@@ -99,3 +99,20 @@ object Problem5 extends App {
   println(reverseFunctional(List(1, 1, 2, 3, 5, 8)))
 
 }
+
+object Problem6 extends App {
+
+  def isPalindrome[A](list: List[A]): Boolean = list match {
+    case Nil => true
+    case x :: Nil => true
+    case x :: (mid :+ z) if x == z => isPalindrome(mid)
+    case x :: (mid :+ z) if x != z => false
+  }
+
+  assert(isPalindrome(List(1, 2, 3, 2, 1)))
+  assert(isPalindrome(List(2, 3, 3, 2)))
+  assert(isPalindrome(List(2)))
+  assert(isPalindrome(Nil))
+  assert(!isPalindrome(List(3, 2, 3, 2, 1)))
+
+}

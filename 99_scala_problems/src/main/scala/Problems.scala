@@ -1,3 +1,6 @@
+import scala.Int
+import scala.annotation.tailrec
+
 object Problem1 extends App {
   //Find the last element of a list.
 
@@ -31,5 +34,28 @@ object Problem2 extends App {
 
   assert(lastBut1(List(1, 1, 2, 3, 5, 8)) == 5)
   assert(lastBut1Rec(List(1, 1, 2, 3, 5, 8)) == 5)
+
+}
+
+object Problem3 extends App {
+
+  def nth[A](n: Int, list: List[A]): A = list(n)
+
+  @tailrec
+  def nth2[A](n: Int, list: List[A]): A = n match {
+    case 0 => list.head
+    case _ => nth2(n - 1, list.tail)
+  }
+
+  @tailrec
+  def nthRecursive[A](n: Int, ls: List[A]): A = (n, ls) match {
+    case (0, h :: _) => h
+    case (n, _ :: tail) => nthRecursive(n - 1, tail)
+    case (_, Nil) => throw new NoSuchElementException
+  }
+
+  assert(nth(2, List(1, 1, 2, 3, 5, 8)) == 2)
+  assert(nth2(2, List(1, 1, 2, 3, 5, 8)) == 2)
+  assert(nthRecursive(2, List(1, 1, 2, 3, 5, 8)) == 2)
 
 }

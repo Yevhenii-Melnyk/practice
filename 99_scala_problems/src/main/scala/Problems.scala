@@ -59,3 +59,14 @@ object Problem3 extends App {
   assert(nthRecursive(2, List(1, 1, 2, 3, 5, 8)) == 2)
 
 }
+
+object Problem4 extends App {
+
+  def length[A](list: List[A]): Int = list.length
+
+  def length1[A](list: List[A]): Int = list.foldLeft(0)((x, y) => x + 1)
+
+  assert(length(List(1, 1, 2, 3, 5, 8)) == 6)
+  assert(length1(List(1, 1, 2, 3, 5, 8)) == 6)
+
+}

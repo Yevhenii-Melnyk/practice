@@ -116,3 +116,14 @@ object Problem6 extends App {
   assert(!isPalindrome(List(3, 2, 3, 2, 1)))
 
 }
+
+
+object Problem7 extends App {
+
+  def flatten(ls: List[Any]): List[Any] = ls flatMap {
+    case ms: List[_] => flatten(ms)
+    case e => List(e)
+  }
+
+  assert(flatten(List(List(1, 1), 2, List(3, List(5, 8)))) == List(1, 1, 2, 3, 5, 8))
+}

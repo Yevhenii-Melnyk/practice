@@ -70,3 +70,32 @@ object Problem4 extends App {
   assert(length1(List(1, 1, 2, 3, 5, 8)) == 6)
 
 }
+
+object Problem5 extends App {
+
+  def reverse[A](list: List[A]): List[A] = list.reverse
+
+  def reverse1[A](list: List[A]): List[A] = list match {
+    case Nil => Nil
+    case x :: tail => reverse1(tail) ++ List(x)
+  }
+
+
+  def reverse2[A](list: List[A]): List[A] = {
+    @tailrec
+    def reverse(acc: List[A], list: List[A]): List[A] = list match {
+      case Nil => acc
+      case x :: tail => reverse(x :: acc, tail)
+    }
+    reverse(Nil, list)
+  }
+
+  def reverseFunctional[A](ls: List[A]): List[A] =
+    ls.foldLeft(List[A]()) { (r, h) => h :: r }
+
+  println(reverse(List(1, 1, 2, 3, 5, 8)))
+  println(reverse1(List(1, 1, 2, 3, 5, 8)))
+  println(reverse2(List(1, 1, 2, 3, 5, 8)))
+  println(reverseFunctional(List(1, 1, 2, 3, 5, 8)))
+
+}

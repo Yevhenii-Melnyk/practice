@@ -143,6 +143,7 @@ object Problem8 extends App {
   }
 
   def compress2[A](list: List[A]): List[A] = {
+    @tailrec
     def compress(acc: List[A], list: List[A]): List[A] = list match {
       case Nil => acc
       case x :: tail => compress(x :: acc, tail.dropWhile(_ == x))
@@ -154,4 +155,43 @@ object Problem8 extends App {
   assert(compress1(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e)) == List('a, 'b, 'c, 'a, 'd, 'e))
   assert(compress2(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e)) == List('a, 'b, 'c, 'a, 'd, 'e))
 
+}
+
+object Problem9 extends App {
+
+  def pack[A](list: List[A]): List[List[A]] = {
+    @tailrec
+    def innerPack(acc: List[List[A]], list: List[A]): List[List[A]] = list match {
+      case Nil => acc
+      case tail => innerPack(tail.takeWhile(_ == tail.head) :: acc, tail.dropWhile(_ == tail.head))
+    }
+    innerPack(Nil, list).reverse
+  }
+
+  def pack1[A](list: List[A]): List[List[A]] = {
+    if (list.isEmpty) List(List())
+    else {
+      val (packed, next) = list span (_ == list.head)
+      if (next == Nil) List(packed)
+      else packed :: pack(next)
+    }
+  }
+
+  def pack2[A](list: List[A]): List[List[A]] = {
+    @tailrec
+    def innerPack(acc: List[List[A]], list: List[A]): List[List[A]] = list match {
+      case Nil => acc
+      case tail =>
+        val (packed, next) = list span (_ == tail.head)
+        innerPack(packed :: acc, next)
+    }
+    innerPack(Nil, list).reverse
+  }
+
+  assert(pack(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
+    == List(List('a, 'a, 'a, 'a), List('b), List('c, 'c), List('a, 'a), List('d), List('e, 'e, 'e, 'e)))
+  assert(pack1(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
+    == List(List('a, 'a, 'a, 'a), List('b), List('c, 'c), List('a, 'a), List('d), List('e, 'e, 'e, 'e)))
+  assert(pack2(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
+    == List(List('a, 'a, 'a, 'a), List('b), List('c, 'c), List('a, 'a), List('d), List('e, 'e, 'e, 'e)))
 }

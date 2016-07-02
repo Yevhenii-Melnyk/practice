@@ -127,3 +127,31 @@ object Problem7 extends App {
 
   assert(flatten(List(List(1, 1), 2, List(3, List(5, 8)))) == List(1, 1, 2, 3, 5, 8))
 }
+
+object Problem8 extends App {
+
+  def compress[A](list: List[A]): List[A] = list match {
+    case Nil => Nil
+    case x :: List() => List(x)
+    case x :: tail if x == tail.head => compress(tail)
+    case x :: tail if x != tail.head => x :: compress(tail)
+  }
+
+  def compress1[A](list: List[A]): List[A] = list match {
+    case Nil => Nil
+    case x :: tail => x :: compress1(tail.dropWhile(_ == x))
+  }
+
+  def compress2[A](list: List[A]): List[A] = {
+    def compress(acc: List[A], list: List[A]): List[A] = list match {
+      case Nil => acc
+      case x :: tail => compress(x :: acc, tail.dropWhile(_ == x))
+    }
+    compress(Nil, list).reverse
+  }
+
+  assert(compress(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e)) == List('a, 'b, 'c, 'a, 'd, 'e))
+  assert(compress1(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e)) == List('a, 'b, 'c, 'a, 'd, 'e))
+  assert(compress2(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e)) == List('a, 'b, 'c, 'a, 'd, 'e))
+
+}

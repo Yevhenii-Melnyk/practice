@@ -216,5 +216,25 @@ object Problem11 extends App {
   }
 
   println(encode(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e)))
-  
+
+}
+
+object Problem12 extends App {
+
+  def decode(tuples: List[(Int, Symbol)]) = {
+    for {
+      (count, symbol) <- tuples
+      i <- 0 until count
+    } yield symbol
+  }
+
+  def decode2[A](ls: List[(Int, A)]): List[A] =
+    ls flatMap { e => List.fill(e._1)(e._2) }
+
+  assert(decode(List((4, 'a), (1, 'b), (2, 'c), (2, 'a), (1, 'd), (4, 'e)))
+    == List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
+
+  assert(decode2(List((4, 'a), (1, 'b), (2, 'c), (2, 'a), (1, 'd), (4, 'e)))
+    == List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
+
 }

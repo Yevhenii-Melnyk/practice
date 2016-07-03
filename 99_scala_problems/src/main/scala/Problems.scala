@@ -238,3 +238,20 @@ object Problem12 extends App {
     == List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
 
 }
+
+object Problem13 extends App {
+
+  def encodeDirect[A](list: List[A]): List[(Int, A)] = {
+    @tailrec
+    def inner(acc: List[(Int, A)], list: List[A]): List[(Int, A)] = {
+      val (same, tail) = list span (_ == list.head)
+      if (same.isEmpty) acc
+      else inner((same.length, same.head) :: acc, tail)
+    }
+    inner(Nil, list).reverse
+  }
+
+  assert(encodeDirect(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
+    == List((4, 'a), (1, 'b), (2, 'c), (2, 'a), (1, 'd), (4, 'e)))
+
+}

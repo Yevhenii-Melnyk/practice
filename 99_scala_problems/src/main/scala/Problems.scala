@@ -205,3 +205,16 @@ object Problem10 extends App {
   assert(encode(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
     == List((4, 'a), (1, 'b), (2, 'c), (2, 'a), (1, 'd), (4, 'e)))
 }
+
+object Problem11 extends App {
+
+  def encode(list: List[Symbol]): List[Any] = {
+    Problem9.pack(list).map { x =>
+      if (x.length == 1) x.head
+      else (x.length, x.head)
+    }
+  }
+
+  println(encode(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e)))
+  
+}

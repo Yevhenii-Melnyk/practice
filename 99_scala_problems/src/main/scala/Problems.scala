@@ -255,3 +255,12 @@ object Problem13 extends App {
     == List((4, 'a), (1, 'b), (2, 'c), (2, 'a), (1, 'd), (4, 'e)))
 
 }
+
+object Problem14 extends App {
+
+  def duplicate[A](list: List[A]) = list flatMap (x => List(x, x))
+
+  assert(duplicate(List('a, 'b, 'c, 'c, 'd))
+    == List('a, 'a, 'b, 'b, 'c, 'c, 'c, 'c, 'd, 'd))
+
+}

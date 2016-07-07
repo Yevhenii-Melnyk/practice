@@ -327,3 +327,14 @@ object Problem19 extends App {
   assert(rotate(-2, List('a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k))
     == List('j, 'k, 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i))
 }
+
+object Problem20 extends App {
+
+  def removeAt(i: Int, symbols: List[Symbol]) = {
+    val (left, right) = (symbols.take(i), symbols.drop(i))
+    (left ::: right.tail, right.head)
+  }
+
+  assert(removeAt(1, List('a, 'b, 'c, 'd))
+    ==(List('a, 'c, 'd), 'b))
+}

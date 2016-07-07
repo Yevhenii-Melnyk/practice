@@ -311,3 +311,19 @@ object Problem18 extends App {
   assert(slice(3, 7, List('a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k))
     == List('d, 'e, 'f, 'g))
 }
+
+object Problem19 extends App {
+
+
+  def rotate(i: Int, symbols: List[Symbol]) = {
+    val n = (i + symbols.length) % symbols.length
+    val (left, right) = (symbols.take(n), symbols.drop(n))
+    right ::: left
+  }
+
+  assert(rotate(3, List('a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k))
+    == List('d, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'a, 'b, 'c))
+
+  assert(rotate(-2, List('a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k))
+    == List('j, 'k, 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i))
+}

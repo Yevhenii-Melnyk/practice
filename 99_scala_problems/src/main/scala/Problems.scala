@@ -280,3 +280,26 @@ object Problem16 extends App {
   assert(drop(3, List('a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k))
     == List('a, 'b, 'd, 'e, 'g, 'h, 'j, 'k))
 }
+
+object Problem17 extends App {
+
+  def split(i: Int, symbols: List[Symbol]) = {
+    @tailrec
+    def split(depth: Int, left: List[Symbol], right: List[Symbol]): (List[Symbol], List[Symbol]) = right match {
+      case _ if depth == i => (left.reverse, right)
+      case x :: tail => split(depth + 1, x :: left, tail)
+    }
+    split(0, Nil, symbols)
+  }
+
+  def split1(i: Int, symbols: List[Symbol]) = {
+    val (left, right) = symbols.zipWithIndex.span(_._2 < i)
+    (left.map(_._1), right.map(_._1))
+  }
+
+  assert(split(3, List('a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k))
+    ==(List('a, 'b, 'c), List('d, 'e, 'f, 'g, 'h, 'i, 'j, 'k)))
+  assert(split1(3, List('a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k))
+    ==(List('a, 'b, 'c), List('d, 'e, 'f, 'g, 'h, 'i, 'j, 'k)))
+}
+

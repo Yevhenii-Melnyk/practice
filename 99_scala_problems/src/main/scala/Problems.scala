@@ -338,3 +338,14 @@ object Problem20 extends App {
   assert(removeAt(1, List('a, 'b, 'c, 'd))
     ==(List('a, 'c, 'd), 'b))
 }
+
+object Problem21 extends App {
+
+  def insertAt(symbol: Symbol, i: Int, symbols: List[Symbol]) = {
+    val (left, right) = symbols.splitAt(i)
+    left ::: symbol :: right
+  }
+
+  assert(insertAt('new, 1, List('a, 'b, 'c, 'd))
+    == List('a, 'new, 'b, 'c, 'd))
+}

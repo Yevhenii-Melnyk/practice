@@ -331,7 +331,7 @@ object Problem19 extends App {
 
 object Problem20 extends App {
 
-  def removeAt(i: Int, symbols: List[Symbol]) = {
+  def removeAt[N](i: Int, symbols: List[N]) = {
     val (left, right) = symbols.splitAt(i)
     (left ::: right.tail, right.head)
   }
@@ -361,9 +361,9 @@ object Problem22 extends App {
   assert(range(4, 9) == List(4, 5, 6, 7, 8, 9))
 }
 
-object Problems23 extends App {
+object Problem23 extends App {
 
-  def randomSelect(n: Int, symbols: List[Symbol]): List[Symbol] = {
+  def randomSelect[N](n: Int, symbols: List[N]): List[N] = {
     if (n == 0) Nil
     else {
       val (rest, symb) = Problem20.removeAt(new Random().nextInt() % symbols.length, symbols)
@@ -375,5 +375,13 @@ object Problems23 extends App {
   val selected = randomSelect(3, original)
   assert(selected.length == 3)
   assert(selected.forall(original.contains(_)))
+
+}
+
+object Problem24 extends App {
+
+  def lotto(n: Int, to: Int) = Problem23.randomSelect(n, Problem22.range(1, to))
+
+  println(lotto(6, 49))
 
 }

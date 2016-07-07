@@ -70,7 +70,7 @@ trait Solver extends GameDef {
     case (block, moves) #:: tail =>
       val newExplored = explored + block
       val newNeighbors = newNeighborsOnly(neighborsWithHistory(block, moves), newExplored)
-      newNeighbors ++ from(tail ++ newNeighbors, newExplored)
+      (block, moves) #:: from(tail ++ newNeighbors, newExplored)
   }
 
   /**

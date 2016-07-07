@@ -1,5 +1,6 @@
 import scala.Int
 import scala.annotation.tailrec
+import scala.util.Random
 
 object Problem1 extends App {
   //Find the last element of a list.
@@ -358,4 +359,21 @@ object Problem22 extends App {
   }
 
   assert(range(4, 9) == List(4, 5, 6, 7, 8, 9))
+}
+
+object Problems23 extends App {
+
+  def randomSelect(n: Int, symbols: List[Symbol]): List[Symbol] = {
+    if (n == 0) Nil
+    else {
+      val (rest, symb) = Problem20.removeAt(new Random().nextInt() % symbols.length, symbols)
+      symb :: randomSelect(n - 1, rest)
+    }
+  }
+
+  private val original = List('a, 'b, 'c, 'd, 'f, 'g, 'h)
+  val selected = randomSelect(3, original)
+  assert(selected.length == 3)
+  assert(selected.forall(original.contains(_)))
+
 }

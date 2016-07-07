@@ -331,7 +331,7 @@ object Problem19 extends App {
 object Problem20 extends App {
 
   def removeAt(i: Int, symbols: List[Symbol]) = {
-    val (left, right) = (symbols.take(i), symbols.drop(i))
+    val (left, right) = symbols.splitAt(i)
     (left ::: right.tail, right.head)
   }
 

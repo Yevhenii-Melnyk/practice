@@ -349,3 +349,13 @@ object Problem21 extends App {
   assert(insertAt('new, 1, List('a, 'b, 'c, 'd))
     == List('a, 'new, 'b, 'c, 'd))
 }
+
+object Problem22 extends App {
+
+  def range(from: Int, to: Int): List[Int] = {
+    if (from == to) List(to)
+    else from :: range(from + 1, to)
+  }
+
+  assert(range(4, 9) == List(4, 5, 6, 7, 8, 9))
+}

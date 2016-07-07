@@ -272,3 +272,11 @@ object Problem15 extends App {
   assert(duplicateN(3, List('a, 'b, 'c, 'c, 'd))
     == List('a, 'a, 'a, 'b, 'b, 'b, 'c, 'c, 'c, 'c, 'c, 'c, 'd, 'd, 'd))
 }
+
+object Problem16 extends App {
+  def drop(i: Int, symbols: List[Symbol]) =
+    symbols.zipWithIndex.filter { case (s, ind) => (ind + 1) % i != 0 }.map(_._1)
+
+  assert(drop(3, List('a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k))
+    == List('a, 'b, 'd, 'e, 'g, 'h, 'j, 'k))
+}

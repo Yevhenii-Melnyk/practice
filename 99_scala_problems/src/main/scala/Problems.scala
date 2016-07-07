@@ -303,3 +303,11 @@ object Problem17 extends App {
     ==(List('a, 'b, 'c), List('d, 'e, 'f, 'g, 'h, 'i, 'j, 'k)))
 }
 
+
+object Problem18 extends App {
+
+  def slice(i: Int, j: Int, symbols: List[Symbol]) = symbols.drop(i).take(j - i) // symbols.slice(i,j)
+
+  assert(slice(3, 7, List('a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k))
+    == List('d, 'e, 'f, 'g))
+}

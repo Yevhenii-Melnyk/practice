@@ -1,4 +1,3 @@
-import scala.Int
 import scala.annotation.tailrec
 import scala.util.Random
 
@@ -383,5 +382,30 @@ object Problem24 extends App {
   def lotto(n: Int, to: Int) = Problem23.randomSelect(n, Problem22.range(1, to))
 
   println(lotto(6, 49))
+
+}
+
+object Problem25 extends App {
+
+  def permute[A](list: List[A]): List[List[A]] = list match {
+    case Nil => List(List())
+    case x :: tail =>
+      val perms = permute(tail)
+      var result: Set[List[A]] = Set()
+      for {
+        innerPerm <- perms
+        index <- 0 to innerPerm.length + 1
+      } {
+        val (left, right) = innerPerm.splitAt(index)
+        result += (left ::: x :: right)
+      }
+      result.toList
+  }
+
+  val permutation = permute(List('a, 'b, 'c))
+  val random = new Random
+
+  println(permutation.length)
+  println(permutation(random.nextInt(permutation.length)))
 
 }

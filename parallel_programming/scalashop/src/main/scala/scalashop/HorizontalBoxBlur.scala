@@ -10,7 +10,7 @@ object HorizontalBoxBlurRunner {
     Key.exec.maxWarmupRuns -> 10,
     Key.exec.benchRuns -> 10,
     Key.verbose -> true
-  ) withWarmer(new Warmer.Default)
+  ) withWarmer (new Warmer.Default)
 
   def main(args: Array[String]): Unit = {
     val radius = 3
@@ -29,6 +29,8 @@ object HorizontalBoxBlurRunner {
     }
     println(s"fork/join blur time: $partime ms")
     println(s"speedup: ${seqtime / partime}")
+
+
   }
 }
 
@@ -37,26 +39,31 @@ object HorizontalBoxBlurRunner {
 object HorizontalBoxBlur {
 
   /** Blurs the rows of the source image `src` into the destination image `dst`,
-   *  starting with `from` and ending with `end` (non-inclusive).
-   *
-   *  Within each row, `blur` traverses the pixels by going from left to right.
-   */
+    * starting with `from` and ending with `end` (non-inclusive).
+    *
+    * Within each row, `blur` traverses the pixels by going from left to right.
+    */
   def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit = {
-  // TODO implement this method using the `boxBlurKernel` method
-
-  ???
+    for {
+      j <- from until end
+      i <- 0 until src.width
+    } dst(i, j) = boxBlurKernel(src, i, j, radius)
   }
 
   /** Blurs the rows of the source image in parallel using `numTasks` tasks.
-   *
-   *  Parallelization is done by stripping the source image `src` into
-   *  `numTasks` separate strips, where each strip is composed of some number of
-   *  rows.
-   */
+    *
+    * Parallelization is done by stripping the source image `src` into
+    * `numTasks` separate strips, where each strip is composed of some number of
+    * rows.
+    */
   def parBlur(src: Img, dst: Img, numTasks: Int, radius: Int): Unit = {
-  // TODO implement using the `task` construct and the `blur` method
-
-  ???
+    val step: Int = src.height / math.min(src.height, numTasks)
+    val toList: List[Int] = (0 to src.height).by(step).toList
+    toList.zip(toList.tail).map { case (from, to) =>
+      task {
+        blur(src, dst, from, to, radius)
+      }
+    }.foreach(_.join)
   }
 
 }

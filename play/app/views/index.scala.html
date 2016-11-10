@@ -1,7 +1,12 @@
 @(message: String)
 
-@main("Welcome to Play") {
+    @main("Welcome to Play") {
+        <script src='@routes.Assets.at("javascripts/index.js")' ></script>
+        <ul id="people"></ul>
 
-    @play20.welcome(message)
+        <form action="@routes.Application.addPerson" method="post">
+            <input name="name" type="text"/>
+            <button>Add person</button>
+        </form>
 
-}
+    }

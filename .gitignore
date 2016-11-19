@@ -3,3 +3,4 @@
 *.eml
 target/
 build/
+.gradle/

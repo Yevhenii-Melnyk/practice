@@ -1,0 +1,159 @@
+BLOCKING
+
+Concurrency Level:      1000
+Time taken for tests:   6.687 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      110000 bytes
+HTML transferred:       0 bytes
+Requests per second:    1495.33 [#/sec] (mean)
+Time per request:       668.748 [ms] (mean)
+Time per request:       0.669 [ms] (mean, across all concurrent requests)
+Transfer rate:          16.06 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1  15.1      0     507
+Processing:     5  659 391.0    706    1798
+Waiting:        2  529 284.1    620    1272
+Total:          6  659 391.1    706    1798
+
+Percentage of the requests served within a certain time (ms)
+  50%    706
+  66%    737
+  75%    766
+  80%    789
+  90%   1218
+  95%   1248
+  98%   1789
+  99%   1794
+ 100%   1798 (longest request)
+
+###########################
+POOL BLOCKING
+
+Concurrency Level:      1000
+Time taken for tests:   2.054 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      110000 bytes
+HTML transferred:       0 bytes
+Requests per second:    4868.61 [#/sec] (mean)
+Time per request:       205.398 [ms] (mean)
+Time per request:       0.205 [ms] (mean, across all concurrent requests)
+Transfer rate:          52.30 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   5.1      0     507
+Processing:    41  147  52.8    148     683
+Waiting:        6   77  66.5     71     673
+Total:         42  147  53.1    148     683
+
+Percentage of the requests served within a certain time (ms)
+  50%    148
+  66%    149
+  75%    150
+  80%    151
+  90%    152
+  95%    152
+  98%    152
+  99%    155
+ 100%    683 (longest request)
+
+###########################
+REACTOR
+
+Concurrency Level:      1000
+Time taken for tests:   1.446 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      110000 bytes
+HTML transferred:       0 bytes
+Requests per second:    6916.37 [#/sec] (mean)
+Time per request:       144.585 [ms] (mean)
+Time per request:       0.145 [ms] (mean, across all concurrent requests)
+Transfer rate:          74.30 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.3      0       1
+Processing:    41  138  19.2    144     152
+Waiting:        6   70  37.1     69     141
+Total:         41  138  19.3    144     152
+
+Percentage of the requests served within a certain time (ms)
+  50%    144
+  66%    146
+  75%    147
+  80%    147
+  90%    148
+  95%    149
+  98%    150
+  99%    151
+ 100%    152 (longest request)
+
+###########################
+POOL c10k
+
+Concurrency Level:      10000
+Time taken for tests:   30.505 seconds
+Complete requests:      100000
+Failed requests:        0
+Total transferred:      1100000 bytes
+HTML transferred:       0 bytes
+Requests per second:    3278.15 [#/sec] (mean)
+Time per request:       3050.505 [ms] (mean)
+Time per request:       0.305 [ms] (mean, across all concurrent requests)
+Transfer rate:          35.21 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   2.7      0     495
+Processing:  1031 2918 437.4   2965    3401
+Waiting:      334 1516 673.8   1489    2900
+Total:       1031 2919 437.4   2965    3401
+
+Percentage of the requests served within a certain time (ms)
+  50%   2965
+  66%   3131
+  75%   3199
+  80%   3215
+  90%   3336
+  95%   3354
+  98%   3381
+  99%   3391
+ 100%   3401 (longest request)
+
+###########################
+REACTOR c10k
+Concurrency Level:      10000
+Time taken for tests:   31.790 seconds
+Complete requests:      100000
+Failed requests:        0
+Total transferred:      1100000 bytes
+HTML transferred:       0 bytes
+Requests per second:    3145.69 [#/sec] (mean)
+Time per request:       3178.955 [ms] (mean)
+Time per request:       0.318 [ms] (mean, across all concurrent requests)
+Transfer rate:          33.79 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   1.6      0     505
+Processing:  1021 3108 597.2   3266    4080
+Waiting:      336 1618 806.8   1536    3748
+Total:       1021 3108 597.3   3267    4080
+
+Percentage of the requests served within a certain time (ms)
+  50%   3267
+  66%   3422
+  75%   3510
+  80%   3577
+  90%   3728
+  95%   3802
+  98%   3939
+  99%   3960
+ 100%   4080 (longest request)
+
+

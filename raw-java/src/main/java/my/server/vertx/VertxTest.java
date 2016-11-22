@@ -17,6 +17,7 @@ public class VertxTest {
         Vertx vertx = Vertx.vertx();
 
         vertx.deployVerticle(new MyVerticle());
+
     }
 
 }

@@ -35,9 +35,17 @@ dependencies {
     }
     compile "io.projectreactor.ipc:reactor-netty"
 
+    compile group: 'io.vertx', name: 'vertx-core', version: '3.3.3'
+    compile group: 'io.vertx', name: 'vertx-web', version: '3.3.3'
+    compile group: 'io.vertx', name: 'vertx-reactive-streams', version: '3.3.3'
+
+    compile group: 'io.reactivex', name: 'rxnetty-http', version: '0.5.2-RC1'
+    compile group: 'io.reactivex', name: 'rxjava-reactive-streams', version: '1.2.1'
+    compile group: 'io.vertx', name: 'vertx-rx-java', version: '3.3.3'
+
     compile "org.freemarker:freemarker"
 //    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core'
-    compile group: 'org.springframework', name: 'spring-web-reactive'
+//    compile group: 'org.springframework', name: 'spring-web-reactive'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind'
 
     testCompile('org.springframework.boot:spring-boot-starter-test')

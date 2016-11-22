@@ -8,7 +8,7 @@ import org.springframework.http.server.reactive.ReactorHttpHandlerAdapter;
 import org.springframework.web.reactive.function.*;
 import org.springframework.web.reactive.result.view.freemarker.FreeMarkerViewResolver;
 import reactor.core.publisher.Flux;
-import reactor.ipc.netty.http.HttpServer;
+//import reactor.ipc.netty.http.HttpServer;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -30,7 +30,7 @@ class Wrapper {
 	}
 }
 
-@SpringBootApplication
+//@SpringBootApplication
 public class ReactiveApp {
 
 	private static final String HOST = "localhost";
@@ -48,18 +48,18 @@ public class ReactiveApp {
 	public static RouterFunction<?> router() {
 		return route(GET("/"), ReactiveApp::handle);
 	}
-
-	@Bean
-	public HttpServer server() {
-		FreeMarkerViewResolver freeMarkerViewResolver = new FreeMarkerViewResolver("", ".ftl");
-		HandlerStrategies strategies = HandlerStrategies.builder().viewResolver(freeMarkerViewResolver).build();
-		HttpHandler httpHandler = toHttpHandler(router(), strategies);
-
-		ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(httpHandler);
-		HttpServer httpServer = HttpServer.create(HOST, PORT);
-		httpServer.start(adapter);
-		return httpServer;
-	}
+//
+//	@Bean
+//	public HttpServer server() {
+//		FreeMarkerViewResolver freeMarkerViewResolver = new FreeMarkerViewResolver("", ".ftl");
+//		HandlerStrategies strategies = HandlerStrategies.builder().viewResolver(freeMarkerViewResolver).build();
+//		HttpHandler httpHandler = toHttpHandler(router(), strategies);
+//
+//		ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(httpHandler);
+//		HttpServer httpServer = HttpServer.create(HOST, PORT);
+//		httpServer.start(adapter);
+//		return httpServer;
+//	}
 
 
 	public static void main(String[] args) throws IOException, InterruptedException {

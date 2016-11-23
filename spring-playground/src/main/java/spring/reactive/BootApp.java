@@ -20,6 +20,8 @@ import io.vertx.ext.web.handler.CookieHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.AbstractEmbeddedReactiveHttpServer;
@@ -30,10 +32,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
-import org.springframework.http.HttpCookie;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseCookie;
+import org.springframework.http.*;
 import org.springframework.http.server.reactive.AbstractServerHttpRequest;
 import org.springframework.http.server.reactive.AbstractServerHttpResponse;
 import org.springframework.http.server.reactive.HttpHandler;
@@ -59,7 +58,7 @@ public class BootApp {
         SpringApplication.run(BootApp.class);
     }
 
-//    @Bean
+    @Bean
     public VertxEmbeddedHttpServerFactory vertxEmbeddedHttpServerFactory() {
         return new VertxEmbeddedHttpServerFactory();
     }
@@ -145,8 +144,8 @@ class VertxEmbeddedReactiveHttpServer extends AbstractEmbeddedReactiveHttpServer
             router.route().handler(CookieHandler.create());
             router.route().handler(ctx -> {
                 System.out.println("CONTEXT IS HERE");
-                handler.apply(ctx);
-            });
+                handler.apply(ctx).subscribe();
+            }).failureHandler(ctx -> System.out.println("HANDLER FAILED"));
             HttpServerOptions httpServerOptions = new HttpServerOptions();
             httpServerOptions.setPort(getPort());
             if (getAddress() != null) {
@@ -183,6 +182,13 @@ class VertxHttpHandlerAdapter extends HttpHandlerAdapterSupport implements Funct
                     routingContext.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
                     return Mono.empty();
                 })
+                .doOnNext(next -> {
+                    System.out.println("GETTING NEXT");
+                })
+                .doOnSubscribe(subscription -> {
+                    System.out.println("SUBSCRIBED");
+                    subscription.request(Long.MAX_VALUE);
+                })
                 .doOnSuccess(aVoid -> logger.info("Successfully completed request"));
     }
 
@@ -210,7 +216,7 @@ class VertxServerHttpRequest extends AbstractServerHttpRequest {
             URI uri = new URI(request.uri());
             SocketAddress remoteAddress = request.remoteAddress();
 
-            return new URI(
+            URI uri1 = new URI(
                     uri.getScheme(),
                     uri.getUserInfo(),
                     (remoteAddress != null ? remoteAddress.host() : null),
@@ -218,6 +224,10 @@ class VertxServerHttpRequest extends AbstractServerHttpRequest {
                     uri.getPath(),
                     uri.getQuery(),
                     uri.getFragment());
+            System.out.println("INIT URI");
+            System.out.println(uri);
+            System.out.println(uri1);
+            return uri1;
         } catch (URISyntaxException ex) {
             throw new IllegalStateException("Could not get URI: " + ex.getMessage(), ex);
         }
@@ -276,8 +286,16 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
     @Override
     protected Mono<Void> writeWithInternal(Publisher<DataBuffer> publisher) {
         System.out.println("writeWithInternal");
-        Flux<Buffer> body = toBuffers(publisher).log();
-        return writeWithInternal(body, response).doOnNext(none -> response.end());
+        Flux<Buffer> body = toBuffers(publisher).log()
+                .doOnNext(buffer -> {
+                    System.out.println("WRITING TO OUTPUT  " + buffer.toString());
+                    response.write(buffer);
+                }).doOnComplete(() -> {
+                    System.out.println("WRITE COMPLETED");
+                    response.end();
+                });
+
+        return body.then();
     }
 
     @Override
@@ -294,6 +312,7 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
     private static Mono<Void> writeWithInternal(Flux<Buffer> body, HttpServerResponse response) {
         ReactiveReadStream<Buffer> rrs = ReactiveReadStream.readStream();
         body.subscribe(rrs);
+
         body.doOnNext(e -> System.out.println("~~~~~~~~~~NEXT"));
         Pump.pump(rrs, response).start();
         return body.then();
@@ -301,12 +320,20 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
 
     @Override
     protected void applyStatusCode() {
-        response.setStatusCode(getStatusCode().value());
+        System.out.println("applyStatusCode");
+        HttpStatus statusCode = getStatusCode();
+        if (statusCode != null) {
+            response.setStatusCode(statusCode.value());
+        }
     }
 
     @Override
     protected void applyHeaders() {
+        System.out.println("applyHeaders");
         HttpHeaders headers = getHeaders();
+        if (!headers.containsKey(HttpHeaders.CONTENT_LENGTH)) {
+            response.setChunked(true);
+        }
         for (String name : headers.keySet()) {
             for (String value : headers.get(name)) {
                 response.putHeader(name, value);
@@ -316,6 +343,7 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
 
     @Override
     protected void applyCookies() {
+        System.out.println("applyCookies");
         for (String name : getCookies().keySet()) {
             for (ResponseCookie httpCookie : getCookies().get(name)) {
                 Cookie cookie = Cookie.cookie(name, httpCookie.getValue());

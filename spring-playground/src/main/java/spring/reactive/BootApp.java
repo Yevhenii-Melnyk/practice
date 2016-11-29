@@ -14,7 +14,10 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.net.SocketAddress;
+import io.vertx.core.streams.Pump;
+import io.vertx.ext.reactivestreams.ReactiveReadStream;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -35,6 +38,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.Cancellation;
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,6 +47,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.vertx.core.http.HttpHeaders.COOKIE;
@@ -183,7 +188,10 @@ class VertxEmbeddedReactiveHttpServer extends AbstractEmbeddedReactiveHttpServer
 				httpServerOptions.setHost(getAddress().getHostAddress());
 			}
 			vertx.createHttpServer(httpServerOptions).requestHandler(request -> {
-				handler.apply(request).subscribe();
+				System.out.println("GET REQUEST");
+				Cancellation apply = handler.apply(request).subscribe(aVoid -> System.out.println("AAAAAAAAAAA"));
+//				apply.doOnSubscribe(s -> System.out.println("SUBSCRIBED"));
+//				apply.subscribe();
 			}).listen();
 		}
 	}
@@ -201,6 +209,7 @@ class VertxHttpHandlerAdapter extends HttpHandlerAdapterSupport implements Funct
 		VertxServerHttpRequest request = new VertxServerHttpRequest(serverRequest, bufferFactory);
 		VertxServerHttpResponse response = new VertxServerHttpResponse(serverRequest.response(), bufferFactory);
 		return getHttpHandler().handle(request, response)
+				.doOnSubscribe(s -> System.out.println("SUBSCRIBED2"))
 				.otherwise(ex -> {
 					logger.error("Could not complete request", ex);
 					serverRequest.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
@@ -259,6 +268,7 @@ class VertxServerHttpRequest extends AbstractServerHttpRequest {
 
 	@Override
 	protected MultiValueMap<String, HttpCookie> initCookies() {
+		System.out.println("initCookies");
 		String cookieHeader = request.headers().get(COOKIE);
 		MultiValueMap<String, HttpCookie> cookies = new LinkedMultiValueMap<>();
 		if (cookieHeader != null) {
@@ -273,11 +283,13 @@ class VertxServerHttpRequest extends AbstractServerHttpRequest {
 
 	@Override
 	public HttpMethod getMethod() {
+		System.out.println("getMethod");
 		return HttpMethod.valueOf(request.method().name());
 	}
 
 	@Override
 	public Flux<DataBuffer> getBody() {
+		System.out.println("getBody");
 		EmitterProcessor<Buffer> stream = EmitterProcessor.<Buffer>create().connect();
 		request.handler(stream::onNext);
 		request.endHandler(e -> stream.onComplete());
@@ -297,10 +309,32 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
 
 	@Override
 	protected Mono<Void> writeWithInternal(Publisher<? extends DataBuffer> publisher) {
-		return toBuffers(publisher)
-				.doOnNext(response::write)
-				.doOnComplete(response::end)
-				.then();
+		System.out.println("writeWithInternal");
+		ReactiveReadStream<Buffer> rrs = ReactiveReadStream.readStream();
+		rrs.onSubscribe(new Subscription() {
+			@Override
+			public void request(long n) {
+				System.out.println("RRS");
+			}
+
+			@Override
+			public void cancel() {
+				System.out.println("RRS CANCEl");
+
+			}
+		});
+		Flux<Buffer> body = toBuffers(publisher);
+		body.subscribe(rrs);
+		Pump pump = Pump.pump(rrs, response);
+		pump.start();
+
+
+		return body.then();
+
+//		return toBuffers(publisher)
+//				.doOnNext(response::write)
+//				.doOnComplete(response::end)
+//				.then();
 	}
 
 	private static Flux<Buffer> toBuffers(Publisher<? extends DataBuffer> dataBuffers) {

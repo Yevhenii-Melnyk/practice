@@ -1,12 +1,13 @@
 package spring.reactive;
 
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerOptions;
@@ -30,7 +31,6 @@ import org.springframework.http.server.reactive.AbstractServerHttpRequest;
 import org.springframework.http.server.reactive.AbstractServerHttpResponse;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.HttpHandlerAdapterSupport;
-import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -63,7 +63,7 @@ public class BootApp {
 
 }
 
-@Controller
+@RestController
 class BootController {
 
 	@Autowired
@@ -100,6 +100,11 @@ class BootController {
 	Book book(@RequestBody Book book) {
 		System.out.println(book);
 		return book;
+	}
+
+	@RequestMapping("/item")
+	public Mono<Item> item(@PathVariable("repetitions") final int repetitions) {
+		return this.itemRepository.findAllItems(Math.max(repetitions, 1)).next();
 	}
 
 	@RequestMapping("/items/{repetitions}")
@@ -143,7 +148,9 @@ class VertxEmbeddedReactiveHttpServer extends AbstractEmbeddedReactiveHttpServer
 	@Override
 	public void start() {
 		if (!running.get()) {
-			vertx.deployVerticle(new ReactiveVerticle(), res -> {
+			DeploymentOptions options = new DeploymentOptions().setWorker(true).setMaxWorkerExecuteTime(Long.MAX_VALUE);
+			vertx.deployVerticle(new ReactiveVerticle(), options, res -> {
+//			vertx.deployVerticle(new ReactiveVerticle(), res -> {
 				if (res.succeeded()) {
 					running.set(true);
 				}
@@ -176,7 +183,6 @@ class VertxEmbeddedReactiveHttpServer extends AbstractEmbeddedReactiveHttpServer
 				httpServerOptions.setHost(getAddress().getHostAddress());
 			}
 			vertx.createHttpServer(httpServerOptions).requestHandler(request -> {
-				System.out.println("GOT REQUEST");
 				handler.apply(request).subscribe();
 			}).listen();
 		}
@@ -198,9 +204,15 @@ class VertxHttpHandlerAdapter extends HttpHandlerAdapterSupport implements Funct
 				.otherwise(ex -> {
 					logger.error("Could not complete request", ex);
 					serverRequest.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
+					serverRequest.response().end();
 					return Mono.empty();
 				})
-				.doOnSuccess(v -> logger.debug("Successfully completed request"));
+				.doOnSuccess(v -> {
+					if (!serverRequest.response().ended()) {
+						serverRequest.response().end();
+					}
+					logger.debug("Successfully completed request");
+				});
 	}
 
 }
@@ -247,18 +259,15 @@ class VertxServerHttpRequest extends AbstractServerHttpRequest {
 
 	@Override
 	protected MultiValueMap<String, HttpCookie> initCookies() {
-		System.out.println("INIT COOKIES");
 		String cookieHeader = request.headers().get(COOKIE);
 		MultiValueMap<String, HttpCookie> cookies = new LinkedMultiValueMap<>();
 		if (cookieHeader != null) {
-			Set<io.netty.handler.codec.http.cookie.Cookie> nettyCookies = ServerCookieDecoder.STRICT.decode(cookieHeader);
-			for (io.netty.handler.codec.http.cookie.Cookie cookie : nettyCookies) {
+			Set<Cookie> nettyCookies = ServerCookieDecoder.STRICT.decode(cookieHeader);
+			for (Cookie cookie : nettyCookies) {
 				HttpCookie httpCookie = new HttpCookie(cookie.name(), cookie.value());
 				cookies.add(cookie.name(), httpCookie);
 			}
 		}
-		System.out.println("COOKIES ARE:");
-		System.out.println(cookies);
 		return cookies;
 	}
 
@@ -278,8 +287,6 @@ class VertxServerHttpRequest extends AbstractServerHttpRequest {
 
 class VertxServerHttpResponse extends AbstractServerHttpResponse {
 
-	private static final Buffer END_SIGNAL = Buffer.buffer(Unpooled.buffer(0, 0));
-
 	private final HttpServerResponse response;
 
 	public VertxServerHttpResponse(HttpServerResponse response, DataBufferFactory dataBufferFactory) {
@@ -289,28 +296,21 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
 	}
 
 	@Override
-	protected Mono<Void> doCommit() {
-		return doCommit(() -> {
-			response.end();
-			return Mono.empty();
-		});
-	}
-
-	@Override
 	protected Mono<Void> writeWithInternal(Publisher<? extends DataBuffer> publisher) {
 		return toBuffers(publisher)
 				.doOnNext(response::write)
-				.doOnNext(e -> System.out.println("Writing"))
 				.doOnComplete(response::end)
-				.doOnComplete(() -> System.out.println("Completed writing"))
 				.then();
+	}
+
+	private static Flux<Buffer> toBuffers(Publisher<? extends DataBuffer> dataBuffers) {
+		return Flux.from(dataBuffers).map(b -> Buffer.buffer(NettyDataBufferFactory.toByteBuf(b)));
 	}
 
 	@Override
 	protected Mono<Void> writeAndFlushWithInternal(Publisher<? extends Publisher<? extends DataBuffer>> publisher) {
-		System.out.println("INTERNAL");
+		// Vertx response flushes data when the internal buffer is full, so just flatten the stream
 		return writeWithInternal(Flux.from(publisher).flatMap(identity()));
-
 	}
 
 	@Override
@@ -338,7 +338,7 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
 	protected void applyCookies() {
 		for (String name : getCookies().keySet()) {
 			for (ResponseCookie httpCookie : getCookies().get(name)) {
-				io.netty.handler.codec.http.cookie.Cookie nettyCookie = new DefaultCookie(httpCookie.getName(), httpCookie.getValue());
+				Cookie nettyCookie = new DefaultCookie(name, httpCookie.getValue());
 				if (!httpCookie.getMaxAge().isNegative()) {
 					nettyCookie.setMaxAge(httpCookie.getMaxAge().getSeconds());
 				}
@@ -346,12 +346,10 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
 				httpCookie.getPath().ifPresent(nettyCookie::setPath);
 				nettyCookie.setSecure(httpCookie.isSecure());
 				nettyCookie.setHttpOnly(httpCookie.isHttpOnly());
-				response.headers().add(SET_COOKIE, ServerCookieEncoder.STRICT.encode(nettyCookie));
+				response.headers()
+						.add(SET_COOKIE, ServerCookieEncoder.STRICT.encode(nettyCookie));
 			}
 		}
 	}
 
-	private static Flux<Buffer> toBuffers(Publisher<? extends DataBuffer> dataBuffers) {
-		return Flux.from(dataBuffers).map(b -> Buffer.buffer(NettyDataBufferFactory.toByteBuf(b)));
-	}
 }

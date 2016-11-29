@@ -7,27 +7,21 @@ import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.net.SocketAddress;
-import io.vertx.ext.web.Cookie;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.CookieHandler;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.AbstractEmbeddedReactiveHttpServer;
 import org.springframework.boot.context.embedded.EmbeddedReactiveHttpServer;
 import org.springframework.boot.context.embedded.EmbeddedReactiveHttpServerCustomizer;
 import org.springframework.boot.context.embedded.ReactiveHttpServerFactory;
-import org.springframework.core.MethodParameter;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
@@ -36,22 +30,17 @@ import org.springframework.http.server.reactive.AbstractServerHttpRequest;
 import org.springframework.http.server.reactive.AbstractServerHttpResponse;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.HttpHandlerAdapterSupport;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.BindingContext;
-import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -67,71 +56,18 @@ public class BootApp {
 		SpringApplication.run(BootApp.class);
 	}
 
-	//	@Bean
+	@Bean
 	public VertxEmbeddedHttpServerFactory vertxEmbeddedHttpServerFactory() {
 		return new VertxEmbeddedHttpServerFactory();
 	}
 
 }
 
-@Component
-class BookMethodArgumentResolver implements HandlerMethodArgumentResolver {
-
-	@Override
-	public boolean supportsParameter(MethodParameter parameter) {
-		return Book.class.isAssignableFrom(parameter.getParameterType());
-	}
-
-	@Override
-	public Mono<Object> resolveArgument(MethodParameter parameter, BindingContext bindingContext, ServerWebExchange exchange) {
-		return Mono.just(new Book(exchange.getRequest().getQueryParams().getFirst("name")));
-	}
-
-}
-
-class Book {
-	private String name;
-	private Integer id;
-
-	public Book() {
-	}
-
-	public Book(String name) {
-		this.name = name;
-	}
-
-	public Book(Integer id, String name) {
-		this.name = name;
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public Integer getId() {
-		return id;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
-	@Override
-	public String toString() {
-		return "Book{" +
-				"name='" + name + '\'' +
-				", id=" + id +
-				'}';
-	}
-}
-
 @Controller
 class BootController {
+
+	@Autowired
+	private ItemRepository itemRepository;
 
 	@GetMapping("/")
 	public
@@ -164,6 +100,11 @@ class BootController {
 	Book book(@RequestBody Book book) {
 		System.out.println(book);
 		return book;
+	}
+
+	@RequestMapping("/items/{repetitions}")
+	public Flux<Item> items(@PathVariable("repetitions") final int repetitions) {
+		return this.itemRepository.findAllItems(Math.max(repetitions, 1));
 	}
 }
 

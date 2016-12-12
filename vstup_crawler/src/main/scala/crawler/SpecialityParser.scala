@@ -7,6 +7,7 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.jsoup.Jsoup
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 case class Student(cert: Double, zno: Double)
 
@@ -34,7 +35,7 @@ object SpecialityParser {
 
     val entries = response.select("tr[title='Допущено до конкурсу']").asScala.map(e => {
       val fields = e.select("td").asScala.toArray
-      Student(fields(4).text.toDouble, fields(5).text.toDouble)
+      Student(Try(fields(4).text.toDouble).getOrElse(0), Try(fields(5).text.toDouble).getOrElse(0))
     }).toArray
 
     def studSum(student: Student) = {

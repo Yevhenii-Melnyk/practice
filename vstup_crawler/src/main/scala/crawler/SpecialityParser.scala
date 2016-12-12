@@ -63,7 +63,7 @@ case class SpecialityMessage(region: String,
 
 class SpecialityActor extends Actor {
 
-  val indexingActor = context actorOf Props(new IndexingActor).withRouter(RoundRobinPool(10))
+  val indexingActor = context actorOf Props(new IndexingActor)
   val urlValidator = new UrlValidator()
 
   override def receive: Receive = {

@@ -1,5 +1,7 @@
 package crawler
 
+import akka.actor.{Actor, Props}
+import akka.routing.RoundRobinPool
 import org.jsoup.Jsoup
 import org.jsoup.nodes.{Element, TextNode}
 
@@ -21,7 +23,7 @@ case class SpecialityInfo(name: String, faculty: String, specialityType: String)
 
 case class Speciality(specialityInfo: SpecialityInfo, url: String, total: Int, free: Int, subjects: SpecialitySubjects)
 
-object UniversityParser extends App {
+object UniversityParser {
 
   def infoValue(e: Element) = {
     e.select("td").get(1).text.trim
@@ -95,12 +97,15 @@ object UniversityParser extends App {
 
   def parseSpecialityInfo(parts: Array[String]) = {
     val length = parts.length
-    println(parts.toList)
-    val specialityType = if (length > 0) specialityTypes.find(sp => parts(0).contains(sp)).get else ""
+    //    println("part(0)   " + parts(0))
+    //    println("specialityTypes   " + specialityTypes)
+    val specialityType = if (length > 0 && parts(0) != null) specialityTypes.find(sp => parts(0).contains(sp)).get else ""
+//    println(parts(1))
     val faculty = if (length > 1) {
       if (parts(1).contains(Faculty))
         parts(1).replace(Faculty, "").replace(",", "").trim
-      else parts(2).replace(Faculty, "").replace(",", "").trim
+      else if (length > 2) parts(2).replace(Faculty, "").replace(",", "").trim
+      else ""
     } else ""
 
     val specialityName = if (length > 2) {
@@ -115,16 +120,16 @@ object UniversityParser extends App {
   def parseSpeciality(e: Element) = {
     val infoNodes = e.select("td").first.childNodes.asScala.toArray.filter(_.isInstanceOf[TextNode]).map(_.toString).map(_.toLowerCase)
     val specialityInfo = parseSpecialityInfo(infoNodes)
-    println(specialityInfo)
+    //    println(specialityInfo)
     val url = Option(e.select(".button.button-mini").first).map(_.absUrl("href")).getOrElse("")
-    println(url)
+    //    println(url)
     val total = parseInt(Option(e.select("nobr[title='Ліцензований обсяг прийому']").first).map(_.text).getOrElse("0"))
-    println(total)
+    //    println(total)
     val free = parseInt(Option(e.select("nobr[title='Обсяг державного замовлення']").first).map(_.text).getOrElse("0"))
-    println(free)
+    //    println(free)
     val subjects = parseSubjects(e.select("td").last.toString)
-    println(subjects)
-    println("~~~~~~~~~~~~~~")
+    //    println(subjects)
+    //    println("~~~~~~~~~~~~~~")
     Speciality(specialityInfo, url, total, free, subjects)
   }
 
@@ -143,46 +148,69 @@ object UniversityParser extends App {
   //  println("~~~~~~~~~~~~~~~")
   //  println(parseSubjects(subjects5))
 
-
   val vnz: String = "http://vstup.info/2016/i2016i92.html#vnz"
-  val response = Jsoup.connect(vnz).ignoreContentType(true)
-    .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1")
-    .get()
 
-  val info = parseInfo(response)
-  println(info)
+  def parseUniversity(vnz: String) = {
+    val response = Jsoup.connect(vnz).ignoreContentType(true)
+      .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1")
+      .get()
 
-  val groups = response.select(".accordion-group")
+    val info = parseInfo(response)
 
-  if (groups.size > 1) {
-    val daily = groups.get(1)
-    val dailySpecialities = daily.select("tbody tr").asScala.map(parseSpeciality).toList
-    println(dailySpecialities)
-  }
+    val groups = response.select(".accordion-group")
 
-  if (groups.size > 2) {
-    val extra = groups.get(2)
-    val extraSpecialities = extra.select("tbody tr").asScala.map(parseSpeciality).toList
-    println(extraSpecialities)
-  }
+    val dailySpecialities = if (groups.size > 1) {
+      val daily = groups.get(1)
+      daily.select("tbody tr").asScala.map(parseSpeciality)
+        .filter(s => "бакалавр".equalsIgnoreCase(s.specialityInfo.specialityType))
+        .filter(_.subjects.mains.nonEmpty)
+        .filter(_.subjects.opts.nonEmpty)
+        .toList
+    } else List()
 
-  if (groups.size > 3) {
-    val night = groups.get(3)
-    val nightSpecialities = night.select("tbody tr").asScala.map(parseSpeciality).toList
-    println(nightSpecialities)
+    val extraSpecialities = if (groups.size > 2) {
+      val extra = groups.get(2)
+      extra.select("tbody tr").asScala.map(parseSpeciality)
+        .filter(s => "бакалавр".equalsIgnoreCase(s.specialityInfo.specialityType))
+        .filter(_.subjects.mains.nonEmpty)
+        .filter(_.subjects.opts.nonEmpty)
+        .toList
+    } else List()
+
+    val nightSpecialities = if (groups.size > 3) {
+      val night = groups.get(3)
+      night.select("tbody tr").asScala.map(parseSpeciality)
+        .filter(s => "бакалавр".equalsIgnoreCase(s.specialityInfo.specialityType))
+        .filter(_.subjects.mains.nonEmpty)
+        .filter(_.subjects.opts.nonEmpty)
+        .toList
+    } else List()
+
+    (info, dailySpecialities, extraSpecialities, nightSpecialities)
   }
 
 }
 
-// украинскому языку и литературе,
-// истории Украины,
-// математике,
-// биологии,
-// географии,
-// физике,
-// химии,
-// английскому,
-// испанскому,
-// немецкому,
-// русскому,
-// французскому
+case class UniversityMessage(regionName: String, university: University)
+
+class UniversityActor extends Actor {
+
+  val universityActor = context actorOf Props(new SpecialityActor).withRouter(RoundRobinPool(30))
+
+  override def receive: Receive = {
+    case UniversityMessage(regionName, university@University(_, url)) =>
+      val (info, dailySpecialities, extraSpecialities, nightSpecialities) = UniversityParser.parseUniversity(url)
+
+      dailySpecialities.foreach(s => sendSpec(s, regionName, info, "daily"))
+      extraSpecialities.foreach(s => sendSpec(s, regionName, info, "extra"))
+      nightSpecialities.foreach(s => sendSpec(s, regionName, info, "night"))
+  }
+
+  def sendSpec(s: Speciality, regionName: String, info: UniversityInfo, timing: String): Unit = {
+    val optK = s.subjects.opts.head.k
+    val mainK = s.subjects.mains.map(_.k).sum
+    val certificateK = 1 - optK - mainK
+    universityActor ! SpecialityMessage(regionName, info, s, timing, certificateK)
+  }
+
+}

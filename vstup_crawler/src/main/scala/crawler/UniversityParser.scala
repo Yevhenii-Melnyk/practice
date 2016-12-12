@@ -1,6 +1,6 @@
 package crawler
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.routing.RoundRobinPool
 import org.jsoup.Jsoup
 import org.jsoup.nodes.{Element, TextNode}
@@ -100,7 +100,7 @@ object UniversityParser {
     //    println("part(0)   " + parts(0))
     //    println("specialityTypes   " + specialityTypes)
     val specialityType = if (length > 0 && parts(0) != null) specialityTypes.find(sp => parts(0).contains(sp)).get else ""
-//    println(parts(1))
+    //    println(parts(1))
     val faculty = if (length > 1) {
       if (parts(1).contains(Faculty))
         parts(1).replace(Faculty, "").replace(",", "").trim
@@ -195,7 +195,7 @@ case class UniversityMessage(regionName: String, university: University)
 
 class UniversityActor extends Actor {
 
-  val universityActor = context actorOf Props(new SpecialityActor).withRouter(RoundRobinPool(30))
+  val universityActor: ActorRef = context.actorOf(Props[SpecialityActor], "speciality")
 
   override def receive: Receive = {
     case UniversityMessage(regionName, university@University(_, url)) =>

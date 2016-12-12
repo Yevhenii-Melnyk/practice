@@ -1,6 +1,6 @@
 package crawler
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.routing.RoundRobinPool
 import org.jsoup.Jsoup
 
@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
 case class University(name: String, url: String)
 
 object RegionParser {
-//  println(getUniversities("http://vstup.info/2016/i2016o21.html#reg"))
+  //  println(getUniversities("http://vstup.info/2016/i2016o21.html#reg"))
 
   def getUniversities(region: String) = {
     val response = Jsoup.connect(region).ignoreContentType(true)
@@ -21,12 +21,11 @@ object RegionParser {
       .map(e => University(e.text, e.absUrl("href"))).toList
     universities
   }
-
 }
 
 class RegionActor extends Actor {
 
-  val universityActor = context actorOf Props(new UniversityActor).withRouter(RoundRobinPool(15))
+  val universityActor: ActorRef = context.actorOf(Props[UniversityActor], "university")
 
   override def receive: Receive = {
     case Region(name, url) =>

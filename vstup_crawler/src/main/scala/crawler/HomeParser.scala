@@ -1,7 +1,10 @@
 package crawler
 
+import java.io.File
+
 import akka.actor.{ActorSystem, Props}
-import akka.routing.RoundRobinPool
+import akka.routing.{FromConfig, RoundRobinPool}
+import com.typesafe.config.ConfigFactory
 import org.jsoup.Jsoup
 
 import scala.collection.JavaConverters._
@@ -15,13 +18,17 @@ object HomeParser extends App {
     .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1")
     .get()
 
+
   val regions = response.select(".tablesaw.tablesaw-stack tr td a").asScala
     .map(e => Region(e.text, e.absUrl("href"))).toList
 
   //println(regions)
 
-  val system = ActorSystem()
-  val regionActor = system.actorOf(Props(new RegionActor).withRouter(RoundRobinPool(5)))
+  val configFile = new File(HomeParser.getClass.getClassLoader.getResource("application.conf").getPath)
+  val config = ConfigFactory.parseFile(configFile)
+  val system = ActorSystem("parserSystem", ConfigFactory.load(config))
+  //  val regionActor = system.actorOf(Props(new RegionActor).withRouter(RoundRobinPool(5)))
+  val regionActor = system.actorOf(Props[RegionActor], "region")
 
   regions.foreach(r => regionActor ! r)
 

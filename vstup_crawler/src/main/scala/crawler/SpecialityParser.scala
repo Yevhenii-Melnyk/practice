@@ -1,6 +1,6 @@
 package crawler
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.actor.Actor.Receive
 import akka.routing.RoundRobinPool
 import org.apache.commons.validator.routines.UrlValidator
@@ -63,7 +63,7 @@ case class SpecialityMessage(region: String,
 
 class SpecialityActor extends Actor {
 
-  val indexingActor = context actorOf Props(new IndexingActor)
+  val indexingActor: ActorRef = context.actorOf(Props[IndexingActor], "indexing")
   val urlValidator = new UrlValidator()
 
   override def receive: Receive = {

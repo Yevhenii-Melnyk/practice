@@ -30,10 +30,10 @@ object SpecialityParser {
       .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1")
       .get()
 
-    val total = Option(response.select("td[title='Ліцензований обсяг прийому']").first).map(_.text).map(parseInt)
-    val free = Option(response.select("td[title='Обсяг державного замовлення']").first).map(_.text).map(parseInt)
+    val total = Option(response.select("td:contains(Ліцензований обсяг прийому)").first).map(_.text).map(parseInt)
+    val free = Option(response.select("td:contains(Обсяг державного замовлення)").first).map(_.text).map(parseInt)
 
-    val entries = response.select("tr[title='Допущено до конкурсу']").asScala.map(e => {
+    val entries = response.select(".tablesaw-sortable tbody tr").asScala.map(e => {
       val fields = e.select("td").asScala.toArray
       Student(Try(fields(4).text.toDouble).getOrElse(0), Try(fields(5).text.toDouble).getOrElse(0))
     }).toArray
@@ -53,6 +53,12 @@ object SpecialityParser {
 
     stat
   }
+}
+
+object SpecialityParserTest extends App {
+  println(SpecialityParser.parseStats("http://vstup.info/2016/209/i2016i209p276858.html#list"))
+  println(SpecialityParser.parseStats("http://vstup.info/2016/41/i2016i41p304416.html#list"))
+  println(SpecialityParser.parseStats("http://vstup.info/2016/79/i2016i79p283182.html#list"))
 }
 
 case class SpecialityMessage(region: String,

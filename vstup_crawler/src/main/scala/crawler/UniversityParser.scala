@@ -45,9 +45,16 @@ object UniversityParser {
   val optionals = """Іноземна мова\s*\((.*)\)\s*\(k=(\d+.?\d*)\)""".r
   val language = """\p{IsCyrillic}+ мова""".r
 
-  def findCommonSubject(s: String) = common.findFirstMatchIn(s).map(m => {
-    Subject(m.group(1).trim.toLowerCase, Option(m.group(2)).map(_.toDouble).getOrElse(0d))
-  })
+  def findCommonSubject(s: String) = {
+    val res = common.findFirstMatchIn(s).map(m => {
+      Subject(m.group(1).trim.toLowerCase, Option(m.group(2)).map(_.toDouble).getOrElse(0d))
+    })
+
+    res match {
+      case Some(Subject(m, _)) if m.isEmpty => parseOptionalSubjects(s)
+      case other => other.toList
+    }
+  }
 
   def parseOptionalSubjects(s: String) = {
     val optionalSubjects = optionals.findFirstMatchIn(s).toList.flatMap(m => {
@@ -66,8 +73,8 @@ object UniversityParser {
     val parts = s.split("<br>").sorted
     val length = parts.length
     if (length == 3) {
-      val mainSubject1 = findCommonSubject(parts(0)).toList
-      val mainSubject2 = findCommonSubject(parts(1)).toList
+      val mainSubject1 = findCommonSubject(parts(0))
+      val mainSubject2 = findCommonSubject(parts(1))
       val optionalSubjects = parseOptionalSubjects(parts(2))
       SpecialitySubjects(mainSubject1 ++ mainSubject2, optionalSubjects)
     } else if (length == 2) {
@@ -127,26 +134,13 @@ object UniversityParser {
     //    println(total)
     val free = parseInt(Option(e.select("nobr[title='Обсяг державного замовлення']").first).map(_.text).getOrElse("0"))
     //    println(free)
-    val subjects = parseSubjects(e.select("td").last.toString)
+    val subjects = parseSubjects(e.select("td").last.toString.replace("<td>", ""))
+    //    println(e.select("td").last.toString)
     //    println(subjects)
     //    println("~~~~~~~~~~~~~~")
     Speciality(specialityInfo, url, total, free, subjects)
   }
 
-  //  val subjects = """1. Математика (k=0.45)<br>2. Українська мова та література (k=0.2)<br>3. Іноземна мова (Англійська мова, Французька мова, Німецька мова, Іспанська мова) (k=0.2) або Фізика (k=0.2)"""
-  //  val subjects2 = """1. Біологія (k=0.4)<br>2. Українська мова та література (k=0.2)<br>3. Історія України (k=0.25) або Математика (k=0.25) або Географія (k=0.25)"""
-  //  val subjects3 = """1. Біологія (k=0.4)<br>2. Українська мова та література (k=0.2)<br>3. Іноземна мова (Англійська мова, Французька мова, Німецька мова, Іспанська мова) (k=0.35) або Історія України (k=0.35) або Географія (k=0.35)"""
-  //  val subjects4 = """1. Математика (k=0.45)<br>2. Російська мова (k=0.45)"""
-  //  val subjects5 = """1. Фаховий іспит<br>2. Іноземна мова (Англійська мова, Французька мова, Німецька мова, Іспанська мова)"""
-  //  println(parseSubjects(subjects))
-  //  println("~~~~~~~~~~~~~~~")
-  //  println(parseSubjects(subjects2))
-  //  println("~~~~~~~~~~~~~~~")
-  //  println(parseSubjects(subjects3))
-  //  println("~~~~~~~~~~~~~~~")
-  //  println(parseSubjects(subjects4))
-  //  println("~~~~~~~~~~~~~~~")
-  //  println(parseSubjects(subjects5))
 
   val vnz: String = "http://vstup.info/2016/i2016i92.html#vnz"
 
@@ -189,6 +183,35 @@ object UniversityParser {
     (info, dailySpecialities, extraSpecialities, nightSpecialities)
   }
 
+}
+
+object UniversityTest extends App {
+  //  val subjects = """1. Математика (k=0.35)<br>2. Українська мова та література (k=0.2)<br>3. Іноземна мова (Англійська мова, Французька мова, Німецька мова, Іспанська мова) (k=0.3) або Фізика (k=0.3)"""
+  val subjects =
+    """1. Математика (k=0.35)<br>2. Українська мова та література (k=0.2)<br>3. Іноземна мова (Англійська мова, Французька мова, Німецька мова, Іспанська мова) (k=0.3) або Географія (k=0.3) або Історія України (k=0.3)"""
+  println(UniversityParser.parseSubjects(subjects))
+  val subjects2 = """1. Українська мова та література (k=0.2)<br>2. Іноземна мова (Англійська мова, Французька мова, Німецька мова, Іспанська мова) (k=0.4)<br>3. Математика (k=0.3) або Географія (k=0.3) або Історія України (k=0.3)"""
+  println(UniversityParser.parseSubjects(subjects2))
+
+  val subjects3 = """1. Математика (k=0.3)<br>2. Українська мова та література (k=0.3)<br>3. Іноземна мова (Англійська мова, Французька мова, Німецька мова, Іспанська мова) (k=0.3) або Історія України (k=0.3)"""
+  println(UniversityParser.parseSubjects(subjects3))
+
+  UniversityParser.parseUniversity("http://vstup.info/2016/i2016i79.html#vnz")._2.foreach(println)
+
+  //  val subjects = """1. Математика (k=0.45)<br>2. Українська мова та література (k=0.2)<br>3. Іноземна мова (Англійська мова, Французька мова, Німецька мова, Іспанська мова) (k=0.2) або Фізика (k=0.2)"""
+  //  val subjects2 = """1. Біологія (k=0.4)<br>2. Українська мова та література (k=0.2)<br>3. Історія України (k=0.25) або Математика (k=0.25) або Географія (k=0.25)"""
+  //  val subjects3 = """1. Біологія (k=0.4)<br>2. Українська мова та література (k=0.2)<br>3. Іноземна мова (Англійська мова, Французька мова, Німецька мова, Іспанська мова) (k=0.35) або Історія України (k=0.35) або Географія (k=0.35)"""
+  //  val subjects4 = """1. Математика (k=0.45)<br>2. Російська мова (k=0.45)"""
+  //  val subjects5 = """1. Фаховий іспит<br>2. Іноземна мова (Англійська мова, Французька мова, Німецька мова, Іспанська мова)"""
+  //  println(UniversityParser.parseSubjects(subjects))
+  //  println("~~~~~~~~~~~~~~~")
+  //  println(parseSubjects(subjects2))
+  //  println("~~~~~~~~~~~~~~~")
+  //  println(parseSubjects(subjects3))
+  //  println("~~~~~~~~~~~~~~~")
+  //  println(parseSubjects(subjects4))
+  //  println("~~~~~~~~~~~~~~~")
+  //  println(parseSubjects(subjects5))
 }
 
 case class UniversityMessage(regionName: String, university: University)

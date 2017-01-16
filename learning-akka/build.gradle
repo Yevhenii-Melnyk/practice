@@ -40,10 +40,12 @@ dependencies {
 
     compile "com.typesafe.akka:akka-actor_2.11:$akka_version"
     compile "com.typesafe.akka:akka-testkit_2.11:$akka_version"
+    compile "org.scala-lang.modules:scala-java8-compat_2.11:0.8.0"
 
     testCompile "junit:junit:4.12"
     testCompile "org.scalatest:scalatest_2.11:3.0.1"
     testCompile "org.jetbrains.spek:spek-api:1.1.0-beta3"
-    testRuntime "org.jetbrains.spek:spek-junit-platform-engine:1.1.0-beta3"
-    testRuntime "org.junit.platform:junit-platform-runner:1.0.0-M3"
+    testCompile "org.jetbrains.spek:spek-junit-platform-engine:1.1.0-beta3"
+    testCompile "org.jetbrains.kotlin:kotlin-test:1.1-M04"
+    testCompile "org.junit.platform:junit-platform-runner:1.0.0-M3"
 }

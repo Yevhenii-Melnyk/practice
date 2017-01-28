@@ -1,2 +1,5 @@
 rootProject.name = 'learning-akka'
+include 'util'
+include 'akkademy-server'
+include 'examples'
 

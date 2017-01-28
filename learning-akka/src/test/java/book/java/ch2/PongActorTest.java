@@ -24,16 +24,16 @@ public class PongActorTest {
 	@Test
 	public void shouldReplyToPingWithPong() throws Exception {
 		Future sFuture = ask(actorRef, "Ping", 1000);
-		final CompletionStage<String> cs = toJava(sFuture);
-		final CompletableFuture<String> jFuture = (CompletableFuture<String>) cs;
+		CompletionStage<String> cs = toJava(sFuture);
+		CompletableFuture<String> jFuture = cs.toCompletableFuture();
 		assertEquals("Pong", jFuture.get(1000, TimeUnit.MILLISECONDS));
 	}
 
 	@Test(expected = ExecutionException.class)
 	public void shouldReplyToUnknownMessageWithFailure() throws Exception {
 		Future sFuture = ask(actorRef, "unknown", 1000);
-		final CompletionStage<String> cs = toJava(sFuture);
-		final CompletableFuture<String> jFuture = (CompletableFuture<String>) cs;
+		CompletionStage<String> cs = toJava(sFuture);
+		CompletableFuture<String> jFuture = cs.toCompletableFuture();
 		jFuture.get(1000, TimeUnit.MILLISECONDS);
 	}
 

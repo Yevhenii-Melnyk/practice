@@ -2,10 +2,7 @@ package book.kotlin.ch2
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import book.kotlin.util.Props
-import book.kotlin.util.ask
-import book.kotlin.util.block
-import book.kotlin.util.toJava
+import book.kotlin.util.*
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.subject.SubjectSpek
@@ -17,27 +14,27 @@ import kotlin.test.assertFailsWith
 
 @RunWith(JUnitPlatform::class)
 class PongActorTest : SubjectSpek<ActorRef>({
-    subject {
-        val system = ActorSystem.create()
-        system.actorOf(Props<KotlinPongActor>())
-    }
-    describe("Pong actor") {
+	subject {
+		val system = ActorSystem.create()
+		system.actorOf(Props<KotlinPongActor>())
+	}
+	describe("Pong actor") {
 
-        it("should respond with Pong") {
-            println(subject)
-            val future = subject.ask("Ping", 1000)
-            assertEquals("Pong", future.toJava<String>().block(1000))
-        }
+		it("should respond with Pong") {
+			println(subject)
+			val future = subject.ask<String>("Ping")
+			assertEquals("Pong", future.block(1000))
+		}
 
-        it("should fail on unknown message") {
-            println(subject)
-            val future = subject.ask("unknown", 1000)
-            assertFailsWith(ExecutionException::class) {
-                future.toJava<String>().block(1000)
-            }
-        }
+		it("should fail on unknown message") {
+			println(subject)
+			val future = subject.ask<String>("unknown")
+			assertFailsWith(ExecutionException::class) {
+				future.block(1000)
+			}
+		}
 
-    }
+	}
 
 })
 

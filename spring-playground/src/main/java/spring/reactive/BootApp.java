@@ -6,9 +6,7 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
@@ -16,8 +14,9 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.core.streams.Pump;
 import io.vertx.ext.reactivestreams.ReactiveReadStream;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -38,16 +37,17 @@ import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.Cancellation;
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.vertx.core.http.HttpHeaders.COOKIE;
@@ -78,7 +78,7 @@ class BootController {
 	public
 	@ResponseBody
 	String get() {
-		System.out.println("IN GET METHOD");
+//		System.out.println("IN GET METHOD");
 		return "Hello reactive!";
 	}
 
@@ -108,12 +108,12 @@ class BootController {
 	}
 
 	@RequestMapping("/item")
-	public Mono<Item> item(@PathVariable("repetitions") final int repetitions) {
+	public Mono<Item> item(@PathVariable("repetitions") int repetitions) {
 		return this.itemRepository.findAllItems(Math.max(repetitions, 1)).next();
 	}
 
 	@RequestMapping("/items/{repetitions}")
-	public Flux<Item> items(@PathVariable("repetitions") final int repetitions) {
+	public Flux<Item> items(@PathVariable("repetitions") int repetitions) {
 		return this.itemRepository.findAllItems(Math.max(repetitions, 1));
 	}
 }
@@ -146,7 +146,9 @@ class VertxEmbeddedReactiveHttpServer extends AbstractEmbeddedReactiveHttpServer
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		vertx = Vertx.vertx();
+		VertxOptions vertxOptions = new VertxOptions()
+				.setMaxEventLoopExecuteTime(Long.MAX_VALUE);
+		vertx = Vertx.vertx(vertxOptions);
 		handler = new VertxHttpHandlerAdapter(getHttpHandler());
 	}
 
@@ -154,8 +156,8 @@ class VertxEmbeddedReactiveHttpServer extends AbstractEmbeddedReactiveHttpServer
 	public void start() {
 		if (!running.get()) {
 			DeploymentOptions options = new DeploymentOptions().setWorker(true).setMaxWorkerExecuteTime(Long.MAX_VALUE);
-			vertx.deployVerticle(new ReactiveVerticle(), options, res -> {
-//			vertx.deployVerticle(new ReactiveVerticle(), res -> {
+//			vertx.deployVerticle(new ReactiveVerticle(), options, res -> {
+			vertx.deployVerticle(new ReactiveVerticle(), res -> {
 				if (res.succeeded()) {
 					running.set(true);
 				}
@@ -180,18 +182,22 @@ class VertxEmbeddedReactiveHttpServer extends AbstractEmbeddedReactiveHttpServer
 	}
 
 	private class ReactiveVerticle extends AbstractVerticle {
+
+		protected final Log logger = LogFactory.getLog(getClass());
+
 		@Override
 		public void start() throws Exception {
+			logger.debug("START");
 			HttpServerOptions httpServerOptions = new HttpServerOptions();
 			httpServerOptions.setPort(getPort());
 			if (getAddress() != null) {
 				httpServerOptions.setHost(getAddress().getHostAddress());
 			}
 			vertx.createHttpServer(httpServerOptions).requestHandler(request -> {
-				System.out.println("GET REQUEST");
-				Cancellation apply = handler.apply(request).subscribe(aVoid -> System.out.println("AAAAAAAAAAA"));
-//				apply.doOnSubscribe(s -> System.out.println("SUBSCRIBED"));
-//				apply.subscribe();
+				logger.debug(Thread.currentThread().getName());
+				logger.debug("BEFORE SUBSCRIBE");
+				handler.apply(request).subscribe();
+				logger.debug("AFTER SUBSCRIBE");
 			}).listen();
 		}
 	}
@@ -209,7 +215,7 @@ class VertxHttpHandlerAdapter extends HttpHandlerAdapterSupport implements Funct
 		VertxServerHttpRequest request = new VertxServerHttpRequest(serverRequest, bufferFactory);
 		VertxServerHttpResponse response = new VertxServerHttpResponse(serverRequest.response(), bufferFactory);
 		return getHttpHandler().handle(request, response)
-				.doOnSubscribe(s -> System.out.println("SUBSCRIBED2"))
+				.doOnSubscribe(s -> logger.debug("OUTER SUBSCRIBE"))
 				.otherwise(ex -> {
 					logger.error("Could not complete request", ex);
 					serverRequest.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
@@ -217,6 +223,7 @@ class VertxHttpHandlerAdapter extends HttpHandlerAdapterSupport implements Funct
 					return Mono.empty();
 				})
 				.doOnSuccess(v -> {
+					logger.debug("DO ON SUCCESS");
 					if (!serverRequest.response().ended()) {
 						serverRequest.response().end();
 					}
@@ -228,6 +235,7 @@ class VertxHttpHandlerAdapter extends HttpHandlerAdapterSupport implements Funct
 
 class VertxServerHttpRequest extends AbstractServerHttpRequest {
 
+	protected final Log logger = LogFactory.getLog(getClass());
 	private final NettyDataBufferFactory bufferFactory;
 
 	private final HttpServerRequest request;
@@ -268,7 +276,7 @@ class VertxServerHttpRequest extends AbstractServerHttpRequest {
 
 	@Override
 	protected MultiValueMap<String, HttpCookie> initCookies() {
-		System.out.println("initCookies");
+		logger.debug("initCookies");
 		String cookieHeader = request.headers().get(COOKIE);
 		MultiValueMap<String, HttpCookie> cookies = new LinkedMultiValueMap<>();
 		if (cookieHeader != null) {
@@ -283,13 +291,12 @@ class VertxServerHttpRequest extends AbstractServerHttpRequest {
 
 	@Override
 	public HttpMethod getMethod() {
-		System.out.println("getMethod");
 		return HttpMethod.valueOf(request.method().name());
 	}
 
 	@Override
 	public Flux<DataBuffer> getBody() {
-		System.out.println("getBody");
+		logger.debug("getBody");
 		EmitterProcessor<Buffer> stream = EmitterProcessor.<Buffer>create().connect();
 		request.handler(stream::onNext);
 		request.endHandler(e -> stream.onComplete());
@@ -299,6 +306,7 @@ class VertxServerHttpRequest extends AbstractServerHttpRequest {
 
 class VertxServerHttpResponse extends AbstractServerHttpResponse {
 
+	protected final Log logger = LogFactory.getLog(getClass());
 	private final HttpServerResponse response;
 
 	public VertxServerHttpResponse(HttpServerResponse response, DataBufferFactory dataBufferFactory) {
@@ -309,32 +317,22 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
 
 	@Override
 	protected Mono<Void> writeWithInternal(Publisher<? extends DataBuffer> publisher) {
-		System.out.println("writeWithInternal");
-		ReactiveReadStream<Buffer> rrs = ReactiveReadStream.readStream();
-		rrs.onSubscribe(new Subscription() {
-			@Override
-			public void request(long n) {
-				System.out.println("RRS");
-			}
-
-			@Override
-			public void cancel() {
-				System.out.println("RRS CANCEl");
-
-			}
-		});
+		logger.debug("WRITE WITH INTERNAL");
 		Flux<Buffer> body = toBuffers(publisher);
-		body.subscribe(rrs);
+		ReactiveReadStream<Buffer> rrs = ReactiveReadStream.readStream();
 		Pump pump = Pump.pump(rrs, response);
-		pump.start();
-
-
-		return body.then();
-
-//		return toBuffers(publisher)
-//				.doOnNext(response::write)
-//				.doOnComplete(response::end)
-//				.then();
+		Flux<Void> transform = body.transform(original -> {
+			original.subscribe(rrs);
+			logger.debug("TRANSFORM");
+			return Flux.<Void>empty()
+					.doOnComplete(() -> logger.debug("ENDED VOID"));
+		});
+		return transform.then()
+				.doOnSubscribe(s -> {
+					logger.debug("PUMP START");
+					pump.start();
+					logger.debug("PUMP END");
+				});
 	}
 
 	private static Flux<Buffer> toBuffers(Publisher<? extends DataBuffer> dataBuffers) {

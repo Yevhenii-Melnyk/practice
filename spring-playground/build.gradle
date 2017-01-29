@@ -10,50 +10,52 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 buildscript {
-    ext {
-        springBootVersion = '2.0.0.BUILD-SNAPSHOT'
-    }
-    repositories {
-        mavenCentral()
-        maven { url "https://repo.spring.io/snapshot" }
-        maven { url "https://repo.spring.io/milestone" }
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-    }
+	ext {
+		springBootVersion = '2.0.0.BUILD-SNAPSHOT'
+	}
+	repositories {
+		mavenCentral()
+		maven { url "https://repo.spring.io/snapshot" }
+		maven { url "https://repo.spring.io/milestone" }
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
 }
 
 repositories {
-    mavenCentral()
-    maven { url "https://repo.spring.io/snapshot" }
-    maven { url "https://repo.spring.io/milestone" }
+	mavenCentral()
+	maven { url "https://repo.spring.io/snapshot" }
+	maven { url "https://repo.spring.io/milestone" }
 }
 
 dependencies {
-    compile('org.springframework.boot.experimental:spring-boot-starter-web-reactive') {
-        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
-    }
-    compile "io.projectreactor.ipc:reactor-netty"
+	compile('org.springframework.boot.experimental:spring-boot-starter-web-reactive') {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+	}
+	compile "io.undertow:undertow-core"
+	compile "io.projectreactor.ipc:reactor-netty"
 
-    compile group: 'io.vertx', name: 'vertx-core', version: '3.3.3'
-    compile group: 'io.vertx', name: 'vertx-web', version: '3.3.3'
-    compile group: 'io.vertx', name: 'vertx-reactive-streams', version: '3.3.3'
+	compile group: 'io.vertx', name: 'vertx-core', version: '3.3.3'
+	compile group: 'io.vertx', name: 'vertx-web', version: '3.3.3'
+	compile group: 'io.vertx', name: 'vertx-reactive-streams', version: '3.3.3'
+	compile group: 'io.vertx', name: 'vertx-rx-java', version: '3.3.3'
 
-//    compile group: 'io.reactivex', name: 'rxnetty-http', version: '0.5.2-RC1'
-//    compile group: 'io.reactivex', name: 'rxjava-reactive-streams', version: '1.2.1'
+	compile group: 'io.reactivex', name: 'rxnetty-http', version: '0.5.2-RC1'
+	compile group: 'io.reactivex', name: 'rxjava-reactive-streams', version: '1.2.1'
 
-    compile "org.freemarker:freemarker"
+	compile "org.freemarker:freemarker"
 //    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core'
 //    compile group: 'org.springframework', name: 'spring-web-reactive'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind'
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind'
 
-    compile "javax.el:javax.el-api:3.0.0"
+	compile "javax.el:javax.el-api:3.0.0"
 
-    testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
 }
 
 dependencyManagement {
-    imports {
-        mavenBom "org.springframework.boot.experimental:spring-boot-dependencies-web-reactive:0.1.0.BUILD-SNAPSHOT"
-    }
+	imports {
+		mavenBom "org.springframework.boot.experimental:spring-boot-dependencies-web-reactive:0.1.0.BUILD-SNAPSHOT"
+	}
 }

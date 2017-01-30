@@ -3,7 +3,6 @@ package book.java.ch2;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.pattern.Patterns;
 import org.junit.Test;
 import scala.concurrent.Future;
 
@@ -18,8 +17,9 @@ import static scala.compat.java8.FutureConverters.toJava;
 
 public class PongActorTest {
 
-	ActorSystem system = ActorSystem.create();
-	ActorRef actorRef = system.actorOf(Props.create(JavaPongActor.class));
+	private ActorSystem system = ActorSystem.create();
+
+	private ActorRef actorRef = system.actorOf(Props.create(JavaPongActor.class));
 
 	@Test
 	public void shouldReplyToPingWithPong() throws Exception {

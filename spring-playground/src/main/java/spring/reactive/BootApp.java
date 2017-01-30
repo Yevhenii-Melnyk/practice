@@ -61,7 +61,7 @@ public class BootApp {
 		SpringApplication.run(BootApp.class);
 	}
 
-	@Bean
+//	@Bean
 	public VertxEmbeddedHttpServerFactory vertxEmbeddedHttpServerFactory() {
 		return new VertxEmbeddedHttpServerFactory();
 	}
@@ -335,8 +335,12 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
 				});
 	}
 
+
+
 	private static Flux<Buffer> toBuffers(Publisher<? extends DataBuffer> dataBuffers) {
-		return Flux.from(dataBuffers).map(b -> Buffer.buffer(NettyDataBufferFactory.toByteBuf(b)));
+		return Flux.from(dataBuffers)
+				.map(NettyDataBufferFactory::toByteBuf)
+				.map(Buffer::buffer);
 	}
 
 	@Override

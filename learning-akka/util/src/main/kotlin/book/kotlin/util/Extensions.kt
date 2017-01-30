@@ -37,6 +37,8 @@ class Props {
 
 }
 
+fun <T> ActorSelection.ask(msg: Any, timeoutMillis: Long) = Patterns.ask(this, msg, timeoutMillis).toJava<T>()
+
 fun <T> ActorRef.ask(msg: Any, timeoutMillis: Long) = Patterns.ask(this, msg, timeoutMillis).toJava<T>()
 
 fun <T> ActorRef.ask(msg: Any) = Patterns.ask(this, msg, 1000).toJava<T>()

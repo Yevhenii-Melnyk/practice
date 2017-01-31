@@ -6,7 +6,10 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
-import io.vertx.core.*;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
@@ -24,7 +27,6 @@ import org.springframework.boot.context.embedded.AbstractEmbeddedReactiveHttpSer
 import org.springframework.boot.context.embedded.EmbeddedReactiveHttpServer;
 import org.springframework.boot.context.embedded.EmbeddedReactiveHttpServerCustomizer;
 import org.springframework.boot.context.embedded.ReactiveHttpServerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
@@ -40,13 +42,10 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -61,7 +60,7 @@ public class BootApp {
 		SpringApplication.run(BootApp.class);
 	}
 
-//	@Bean
+	//	@Bean
 	public VertxEmbeddedHttpServerFactory vertxEmbeddedHttpServerFactory() {
 		return new VertxEmbeddedHttpServerFactory();
 	}
@@ -115,6 +114,14 @@ class BootController {
 	@RequestMapping("/items/{repetitions}")
 	public Flux<Item> items(@PathVariable("repetitions") int repetitions) {
 		return this.itemRepository.findAllItems(Math.max(repetitions, 1));
+	}
+
+	@RequestMapping("/complex")
+	public Mono<ComplexItem> complexItem() {
+		return Mono.just(new ComplexItem(Flux.just(
+				new Item(1, "name1"),
+				new Item(2, "name2")
+		)));
 	}
 }
 
@@ -334,7 +341,6 @@ class VertxServerHttpResponse extends AbstractServerHttpResponse {
 					logger.debug("PUMP END");
 				});
 	}
-
 
 
 	private static Flux<Buffer> toBuffers(Publisher<? extends DataBuffer> dataBuffers) {

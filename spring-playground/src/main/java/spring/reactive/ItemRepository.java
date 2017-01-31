@@ -55,6 +55,19 @@ class Item {
 
 }
 
+class ComplexItem {
+
+	private Flux<Item> items;
+
+	public ComplexItem(Flux<Item> items) {
+		this.items = items;
+	}
+
+	public Flux<Item> getItems() {
+		return items;
+	}
+}
+
 @Component
 class BookMethodArgumentResolver implements HandlerMethodArgumentResolver {
 

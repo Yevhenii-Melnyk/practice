@@ -1,4 +1,4 @@
-package sample.spring;
+package sample.spring.slash;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,10 +17,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 import java.util.List;
 
-@SpringBootApplication
-public class SampleSpringApp {
+@SpringBootApplication(scanBasePackages = "sample.spring.slash")
+public class SlashSpringApp {
 	public static void main(String[] args) {
-		SpringApplication.run(SampleSpringApp.class, args);
+		SpringApplication.run(SlashSpringApp.class, args);
 	}
 }
 

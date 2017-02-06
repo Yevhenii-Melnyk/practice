@@ -45,6 +45,8 @@ subprojects {
 		compile "com.typesafe.akka:akka-remote_2.11:$akka_version"
 		compile "org.scala-lang.modules:scala-java8-compat_2.11:0.8.0"
 
+		compile "com.syncthemall:boilerpipe:1.2.2"
+
 		testCompile "junit:junit:4.12"
 		compile "org.scalatest:scalatest_2.11:3.0.1"
 		testCompile "org.jetbrains.spek:spek-api:1.1.0-beta3"

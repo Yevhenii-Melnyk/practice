@@ -9,10 +9,13 @@ import reactor.core.publisher.Mono;
 import reactor.ipc.netty.http.server.HttpServer;
 
 import java.io.IOException;
+import java.net.URI;
 
+import static org.springframework.http.HttpStatus.FOUND;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 import static org.springframework.web.reactive.function.server.RouterFunctions.toHttpHandler;
+import static org.springframework.web.reactive.function.server.ServerResponse.status;
 
 public class FunctionalReactiveServer {
 
@@ -20,7 +23,8 @@ public class FunctionalReactiveServer {
 	public static final int PORT = 8080;
 
 	public static void main(String[] args) throws InterruptedException, IOException {
-		RouterFunction<ServerResponse> route = route(GET("/hello"), FunctionalReactiveServer::sayHelloHandler);
+		RouterFunction<ServerResponse> route = route(GET("/hello"), FunctionalReactiveServer::sayHelloHandler)
+				.andRoute(GET("/redirect"), request -> status(FOUND).location(URI.create("/hello")).build());
 		HttpHandler httpHandler = toHttpHandler(route);
 
 		ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(httpHandler);

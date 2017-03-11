@@ -5,25 +5,23 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
+import java.io.IOException;
 
-@Controller
+@RestController
 public class FileController {
 
 	@GetMapping("/file")
-	@ResponseBody
 	public Mono<Void> getFile(ServerHttpRequest request, ServerHttpResponse response) {
-//		System.out.println(request.getHeaders());
 		HttpRange range = request.getHeaders().getRange().get(0);
 		try {
 			ZeroCopyHttpOutputMessage zeroCopyResponse = (ZeroCopyHttpOutputMessage) response;
-			Resource logo = new ClassPathResource("fish.mp4");
-			File file = logo.getFile();
+			Resource resource = new ClassPathResource("fish.mp4");
+			File file = resource.getFile();
 			long length = file.length();
 			long chunk = length / 4;
 			HttpHeaders headers = zeroCopyResponse.getHeaders();
@@ -41,6 +39,25 @@ public class FileController {
 		} catch (Throwable ex) {
 			return Mono.error(ex);
 		}
+	}
+
+	@GetMapping("/resource")
+	public ResponseEntity<Resource> resource() throws IOException {
+		Resource resource = new ClassPathResource("fish.mp4");
+		return ResponseEntity.ok()
+				.contentType(new MediaType("video", "mp4"))
+				.header("Content-Disposition", "attachment")
+				.body(resource);
+	}
+
+	@GetMapping("/writeWith")
+	public Mono<Void> writeWith(ServerHttpResponse response) throws IOException {
+		Resource resource = new ClassPathResource("fish.mp4");
+		ZeroCopyHttpOutputMessage zeroCopyResponse = (ZeroCopyHttpOutputMessage) response;
+		response.getHeaders().set("Content-Disposition", "attachment");
+		response.getHeaders().setContentType(new MediaType("video", "mp4"));
+		File file = resource.getFile();
+		return zeroCopyResponse.writeWith(file, 0, file.length());
 	}
 
 }

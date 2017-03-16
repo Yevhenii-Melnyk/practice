@@ -2,14 +2,21 @@ package spring.reactive;
 
 public class CustomEntity {
 
-	private String str;
+	private String name;
 
-	public CustomEntity(String str) {
-		this.str = str;
+	public CustomEntity() {
 	}
 
-	public String getStr() {
-		return str;
+	public CustomEntity(String name) {
+		this.name = name;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

@@ -1,0 +1,23 @@
+<form onsubmit="uploadFile()">
+    <input type="file" id="fileInput"/>
+    <input type="submit"/>
+</form>
+
+<script>
+    function uploadFile() {
+        event.preventDefault();
+        var fileInput = document.getElementById("fileInput");
+        var fileList = fileInput.files;
+        if (fileList.length > 0) {
+            var fileToUpload = fileList[0];
+            UploadFile(fileToUpload);
+        }
+    }
+
+    function UploadFile(file) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/uploadFile", true);
+        xhr.setRequestHeader("filename", file.name);
+        xhr.send(file);
+    }
+</script>

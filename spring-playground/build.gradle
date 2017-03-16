@@ -30,6 +30,7 @@ repositories {
 }
 
 dependencies {
+    compile("org.springframework.boot:spring-boot-devtools")
     compile("org.springframework.boot:spring-boot-starter-webflux")
 //            {
 //                exclude group: "io.projectreactor.ipc", module: "reactor-netty"

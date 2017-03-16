@@ -3,6 +3,7 @@ package spring.reactive;
 import io.vertx.core.Future;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -14,6 +15,10 @@ import static org.springframework.http.HttpStatus.FOUND;
 
 @RestController
 public class SampleController {
+
+	@GetMapping("/void")
+	public void voidMethod(){
+	}
 
 	@GetMapping("/resp")
 	public ResponseEntity<Mono<String>> resp() {

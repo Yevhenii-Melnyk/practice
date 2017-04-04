@@ -6,11 +6,18 @@ import org.springframework.http.*;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 @RestController
 public class FileController {
@@ -58,6 +65,33 @@ public class FileController {
 		response.getHeaders().setContentType(new MediaType("video", "mp4"));
 		File file = resource.getFile();
 		return zeroCopyResponse.writeWith(file, 0, file.length());
+	}
+
+	@PostMapping("/uploadFile")
+	public Mono<Void> uploadFile(ServerHttpRequest request, ServerHttpResponse response) throws IOException {
+		String filename = request.getHeaders().getFirst("filename");
+		Path filePath = Paths.get("uploads", filename);
+		Files.createDirectories(Paths.get("uploads"));
+		FileChannel fileChannel = FileChannel.open(filePath,
+				StandardOpenOption.TRUNCATE_EXISTING,
+				StandardOpenOption.CREATE,
+				StandardOpenOption.WRITE);
+		return request.getBody()
+				.doOnNext(dataBuffer -> {
+					try {
+						fileChannel.write(dataBuffer.asByteBuffer());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				})
+				.doOnComplete(() -> {
+					try {
+						fileChannel.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				})
+				.then();
 	}
 
 }

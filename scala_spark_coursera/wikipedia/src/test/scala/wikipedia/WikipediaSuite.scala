@@ -49,6 +49,13 @@ class WikipediaSuite extends FunSuite with BeforeAndAfterAll {
     assert(res, "occurrencesOfLang given (specific) RDD with one element should equal to 1")
   }
 
+	test("'rankLangsUsingIndex' run on a subset of the dataset provided in object `WikipediaData` returns the correct ranking (in descending order)"){
+		assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+		import WikipediaRanking._
+		val index = makeIndex(langs, wikiRdd)
+		val ranked = rankLangsUsingIndex(index)
+	}
+
   test("'rankLangs' should work for RDD with two elements") {
     assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
     import WikipediaRanking._
@@ -86,7 +93,7 @@ class WikipediaSuite extends FunSuite with BeforeAndAfterAll {
     val rdd = sc.parallelize(articles)
     val index = makeIndex(langs, rdd)
     val ranked = rankLangsUsingIndex(index)
-    val res = (ranked.head._1 == "Scala")
+    val res = ranked.head._1 == "Scala"
     assert(res)
   }
 
@@ -103,7 +110,7 @@ class WikipediaSuite extends FunSuite with BeforeAndAfterAll {
       )
     val rdd = sc.parallelize(articles)
     val ranked = rankLangsReduceByKey(langs, rdd)
-    val res = (ranked.head._1 == "Java")
+    val res = ranked.head._1 == "Java"
     assert(res)
   }
 
